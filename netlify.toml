@@ -10,3 +10,9 @@
   for = "/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
+
+# 정적 파일 경로 제외
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 200

@@ -9,16 +9,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingElement = document.getElementById('loading');
 
     const isDailyGroup = window.location.pathname.includes('daily_group');
+    const isDailyGlobal = window.location.pathname.includes('daily_global');
+
     const jsonBaseUrl = isDailyGroup 
-        ? 'https://ssh-oci.duckdns.org/static/reports/grouped_reports.json' 
-        : 'https://ssh-oci.duckdns.org/static/reports/recent_reports.json';
+        ? 'https://ssh-oci.duckdns.org/static/reports/daily_group_reports.json'
+        : isDailyGlobal
+            ? 'https://ssh-oci.duckdns.org/static/reports/daily_global_reports.json'
+            : 'https://ssh-oci.duckdns.org/static/reports/recent_reports.json';
 
     const timestamp = new Date().getTime();
     const jsonUrl = `${jsonBaseUrl}?t=${timestamp}`;
 
     subtitleElement.textContent = isDailyGroup 
-        ? '현재 메뉴: 일자별 레포트' 
-        : '현재 메뉴: 최근 게시된 레포트';
+        ? '현재 메뉴: 일자별 레포트 (그룹)'
+        : isDailyGlobal
+            ? '현재 메뉴: 일자별 레포트 (글로벌)'
+            : '현재 메뉴: 최근 게시된 레포트';
 
     // 로딩 표시
     loadingElement.style.display = 'block';
@@ -40,6 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingElement.style.display = 'none';
         });
 
+    if (event.key === ' ' || event.key === 'Enter') {
+        const focusedElement = document.activeElement;
+        if (focusedElement && focusedElement.tagName === 'A') {
+            // 스페이스바 또는 엔터키를 눌렀을 때 링크 열기
+            window.location.href = focusedElement.href;
+        }
+    }    
     function renderReports(data) {
         reportContainer.innerHTML = ''; 
     
