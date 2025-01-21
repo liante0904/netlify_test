@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const isDailyGroup = window.location.pathname.includes('daily_group');
     const jsonBaseUrl = isDailyGroup 
         ? 'https://ssh-oci.duckdns.org/static/reports/grouped_reports.json' 
-        : 'https://ssh-oci.duckdns.org//static/reports/recent_reports.json';
+        : 'https://ssh-oci.duckdns.org/static/reports/recent_reports.json';
 
     const timestamp = new Date().getTime();
     const jsonUrl = `${jsonBaseUrl}?t=${timestamp}`;
