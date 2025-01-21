@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>증권사 레포트 리스트</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <header>
+        <div class="title" onclick="location.href='/'">🏠증권사 레포트 리스트</div>
+        <div class="hamburger-menu" onclick="toggleMenu()">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="menu-panel">
+            <div class="menu-title">메뉴</div>
+            <a class="menu-item" href="/">최근 게시된 레포트</a>
+            <a class="menu-item" href="/report/daily_group">일자별 레포트</a>
+        </div>
+    </header>
+    <div class="subtitle" id="subtitle">현재 메뉴</div>
+    <div class="loading" id="loading">로딩 중...</div> <!-- 로딩 표시 -->
+    <div class="container" id="report-container"></div>
+
+    <script src="assets/js/scripts.js"></script>
+</body>
+</html>
