@@ -47,29 +47,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const keyword = decodeURIComponent(currentPath.split('/').pop());
         subtitleElement.textContent = `검색 결과: "${keyword}"`;
 
-        // API 호출
-        const apiUrl = `https://ssh-oci.duckdns.org/reports/search?keyword=${encodeURIComponent(keyword)}`;
+        let offset = 0;
+        const limit = 30;
+        let isFetching = false; // 중복 fetch 방지 플래그
+        let hasMoreData = true; // 데이터가 더 있는지 여부
+
+        const apiUrl = (offset, limit) =>
+            `https://ssh-oci.duckdns.org/reports/search?keyword=${encodeURIComponent(keyword)}&offset=${offset}&limit=${limit}`;
+
         loadingElement.style.display = 'block';
 
-        fetch(apiUrl)
-            .then(response => {
-                if (!response.ok) throw new Error('네트워크 응답에 문제가 있습니다.');
-                return response.json();
-            })
-            .then(data => {
-                renderSearchResults(data);
-            })
-            .catch(error => {
-                console.error('API 호출 중 오류 발생:', error);
-                reportContainer.innerHTML = '<p>검색 결과를 가져오는 데 실패했습니다.</p>';
-            })
-            .finally(() => {
-                loadingElement.style.display = 'none';
-            });
+        const fetchAndRenderData = () => {
+            if (isFetching || !hasMoreData) return;
 
-        function renderSearchResults(data) {
-            reportContainer.innerHTML = ''; // 기존 내용을 초기화
-        
+            isFetching = true; // fetch 중으로 설정
+            fetch(apiUrl(offset, limit))
+                .then(response => {
+                    if (!response.ok) throw new Error('네트워크 응답에 문제가 있습니다.');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.length === 0) {
+                        hasMoreData = false; // 더 이상 데이터 없음
+                        if (offset === 0) {
+                            reportContainer.innerHTML = '<p>검색 결과가 없습니다.</p>';
+                        } else {
+                            showEndOfResultsMessage();
+                        }
+                        return;
+                    }
+
+                    renderSearchResults(data);
+                    offset += limit; // offset 증가
+                })
+                .catch(error => {
+                    console.error('API 호출 중 오류 발생:', error);
+                    if (offset === 0) {
+                        reportContainer.innerHTML = '<p>검색 결과를 가져오는 데 실패했습니다.</p>';
+                    }
+                })
+                .finally(() => {
+                    isFetching = false; // fetch 완료
+                    loadingElement.style.display = 'none';
+                });
+        };
+
+        const renderSearchResults = (data) => {
             // 날짜별로 그룹화하여 정렬
             const sortedData = Object.entries(data).sort(([dateA], [dateB]) => {
                 // 날짜 형식 확인 및 파싱
@@ -127,8 +150,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 최종적으로 모든 내용을 컨테이너에 추가
                 reportContainer.appendChild(dateGroup);
             });
-        }
+        };
         
+        const showEndOfResultsMessage = () => {
+            const endMessage = document.createElement('div');
+            endMessage.className = 'end-of-results';
+            endMessage.textContent = '모든 데이터를 조회했습니다.';
+            reportContainer.appendChild(endMessage);
+        };
+
+        // 무한 스크롤 이벤트 리스너
+        window.addEventListener('scroll', () => {
+            const scrollPosition = window.scrollY + window.innerHeight;
+            const threshold = document.documentElement.scrollHeight * 0.6;
+
+            if (scrollPosition > threshold) {
+                fetchAndRenderData();
+            }
+        });
+
+        // 초기 데이터 로드
+        fetchAndRenderData();
         return; // 검색 페이지 전용 로직 이후 일반 페이지 로직 실행 방지
     }
 
