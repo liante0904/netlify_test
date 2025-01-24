@@ -47,21 +47,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const keyword = decodeURIComponent(currentPath.split('/').pop());
         subtitleElement.textContent = `검색 결과: "${keyword}"`;
 
-        let offset = 0;
-        const limit = 30;
+        let offset = 0; // 처음 오프셋 값
+        let limit = 30; // 처음 limit 값
         let isFetching = false; // 중복 fetch 방지 플래그
         let hasMoreData = true; // 데이터가 더 있는지 여부
-
-        const apiUrl = (offset, limit) =>
-            `https://ssh-oci.duckdns.org/reports/search?keyword=${encodeURIComponent(keyword)}&offset=${offset}&limit=${limit}`;
-
-        loadingElement.style.display = 'block';
-
+        
         const fetchAndRenderData = () => {
             if (isFetching || !hasMoreData) return;
-
+        
             isFetching = true; // fetch 중으로 설정
-            fetch(apiUrl(offset, limit))
+            fetch(apiUrl(offset, limit)) // 현재 offset과 limit으로 API 호출
                 .then(response => {
                     if (!response.ok) throw new Error('네트워크 응답에 문제가 있습니다.');
                     return response.json();
@@ -76,9 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         return;
                     }
-
+        
                     renderSearchResults(data);
-                    offset += limit; // offset 증가
+                    offset = limit; // offset을 현재 limit 값으로 설정
+                    limit += 30;   // limit은 30씩 증가
                 })
                 .catch(error => {
                     console.error('API 호출 중 오류 발생:', error);
@@ -91,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadingElement.style.display = 'none';
                 });
         };
+
 
         const renderSearchResults = (data) => {
             // 날짜별로 그룹화하여 정렬
