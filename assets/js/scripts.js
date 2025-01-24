@@ -48,7 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
         subtitleElement.textContent = `검색 결과: "${keyword}"`;
 
         let offset = 0;
-        const limit = 30;
+        let limit = 30;
+        const articleLimit = 30;
         let isFetching = false; // 중복 fetch 방지 플래그
         let hasMoreData = true; // 데이터가 더 있는지 여부
 
@@ -78,7 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     renderSearchResults(data);
-                    offset += limit; // offset 증가
+                    limit  += articleLimit; // limit 증가
+                    offset += articleLimit; // offset 증가
                 })
                 .catch(error => {
                     console.error('API 호출 중 오류 발생:', error);
@@ -162,9 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // 무한 스크롤 이벤트 리스너
         window.addEventListener('scroll', () => {
             const scrollPosition = window.scrollY + window.innerHeight;
-            const threshold = document.documentElement.scrollHeight * 0.6;
+            const threshold = document.documentElement.scrollHeight * 0.3;
 
             if (scrollPosition > threshold) {
+                loadingElement.style.display = 'block'; // 로딩 표시
                 fetchAndRenderData();
             }
         });
