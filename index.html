@@ -32,6 +32,7 @@
 <body>
     <header>
         <div class="title" onclick="location.href='/'">🏠증권사 레포트 리스트</div>
+        <div class="search-button" onclick="toggleSearch()">🔍</div> <!-- 검색 버튼 -->
         <div class="hamburger-menu" onclick="toggleMenu()">
             <div></div>
             <div></div>
@@ -47,7 +48,20 @@
     <div class="subtitle" id="subtitle">현재 메뉴</div>
     <div class="loading" id="loading">로딩 중...</div> <!-- 로딩 표시 -->
     <div class="container" id="report-container"></div>
-
+    <!-- 검색 오버레이 -->
+    <div class="search-overlay" id="searchOverlay" onclick="toggleSearch()">
+        <div class="search-container">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="검색어를 입력하세요..."
+                class="search-input"
+                onclick="event.stopPropagation()"
+            />
+            <button class="search-submit" onclick="submitSearch()">검색</button>
+            <button class="search-close" onclick="toggleSearch()">×</button>
+        </div>
+    </div>
     <script src="/assets/js/scripts.js"></script>
 </body>
 </html>
