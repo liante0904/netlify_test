@@ -44,107 +44,114 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // `/reports/search/{키워드}` 페이지인지 확인
     if (currentPath.startsWith('/reports/search/')) {
-        const keyword = decodeURIComponent(currentPath.split('/').pop()); // URL에서 키워드 추출
+        const keyword = decodeURIComponent(currentPath.split('/').pop());
         subtitleElement.textContent = `검색 결과: "${keyword}"`;
 
-        let offset = 0; // 처음 오프셋 값
-        let limit = 30; // 요청당 데이터 개수
+        let offset = 0;
+        const limit = 30;
         let isFetching = false; // 중복 fetch 방지 플래그
-        let hasMoreData = true; // 더 가져올 데이터가 있는지 여부
+        let hasMoreData = true; // 데이터가 더 있는지 여부
 
-        // 검색 API URL 생성 함수
         const apiUrl = (offset, limit) =>
             `https://ssh-oci.duckdns.org/reports/search?keyword=${encodeURIComponent(keyword)}&offset=${offset}&limit=${limit}`;
-        
-        // 데이터 가져오기 및 렌더링
+
+        loadingElement.style.display = 'block';
+
         const fetchAndRenderData = () => {
-            if (isFetching || !hasMoreData) return; // 이미 fetch 중이거나 더 가져올 데이터가 없는 경우 중단
-        
-            isFetching = true; // fetch 중 상태로 설정
-            fetch(apiUrl(offset, limit)) // API 호출
+            if (isFetching || !hasMoreData) return;
+
+            isFetching = true; // fetch 중으로 설정
+            fetch(apiUrl(offset, limit))
                 .then(response => {
-                    if (!response.ok) throw new Error('네트워크 응답에 문제가 있습니다.'); // 오류 처리
+                    if (!response.ok) throw new Error('네트워크 응답에 문제가 있습니다.');
                     return response.json();
                 })
                 .then(data => {
-                    if (data.length === 0) { // 더 이상 데이터가 없으면 종료
-                        hasMoreData = false; 
-                        if (offset === 0) { // 첫 요청인데 데이터가 없으면 "결과 없음" 표시
+                    if (data.length === 0) {
+                        hasMoreData = false; // 더 이상 데이터 없음
+                        if (offset === 0) {
                             reportContainer.innerHTML = '<p>검색 결과가 없습니다.</p>';
                         } else {
-                            showEndOfResultsMessage(); // 모든 데이터 로드 완료 메시지 표시
+                            showEndOfResultsMessage();
                         }
                         return;
                     }
-        
-                    renderSearchResults(data); // 가져온 데이터를 렌더링
-                    offset += limit; // 다음 호출을 위해 offset 증가
+
+                    renderSearchResults(data);
+                    offset += limit; // offset 증가
                 })
                 .catch(error => {
                     console.error('API 호출 중 오류 발생:', error);
-                    if (offset === 0) { // 첫 요청에서 오류 발생 시 메시지 표시
+                    if (offset === 0) {
                         reportContainer.innerHTML = '<p>검색 결과를 가져오는 데 실패했습니다.</p>';
                     }
                 })
                 .finally(() => {
-                    isFetching = false; // fetch 상태 초기화
-                    loadingElement.style.display = 'none'; // 로딩 스피너 숨김
+                    isFetching = false; // fetch 완료
+                    loadingElement.style.display = 'none';
                 });
         };
 
-        // 검색 결과 렌더링 함수
         const renderSearchResults = (data) => {
             // 날짜별로 그룹화하여 정렬
             const sortedData = Object.entries(data).sort(([dateA], [dateB]) => {
-                const dateAParsed = new Date(dateA); // 날짜 A 파싱
-                const dateBParsed = new Date(dateB); // 날짜 B 파싱
-                return dateBParsed - dateAParsed; // 최신 날짜가 위로 오도록 정렬
+                // 날짜 형식 확인 및 파싱
+                const dateAParsed = new Date(dateA);
+                const dateBParsed = new Date(dateB);
+                return dateBParsed - dateAParsed;
             });
-
-            // 날짜 및 회사별로 결과 표시
+        
             sortedData.forEach(([date, companies]) => {
                 const dateGroup = document.createElement('div');
                 dateGroup.className = 'date-group';
-
+        
+                // 날짜 타이틀
                 const dateTitle = document.createElement('div');
                 dateTitle.className = 'date-title';
                 dateTitle.textContent = date;
                 dateGroup.appendChild(dateTitle);
-
+        
+                // 회사별로 리포트 표시
                 Object.entries(companies).forEach(([company, reports]) => {
                     const companyGroup = document.createElement('div');
                     companyGroup.className = 'company-group';
-
+        
+                    // 회사 타이틀
                     const companyTitle = document.createElement('div');
                     companyTitle.className = 'company-title';
                     companyTitle.textContent = company;
                     companyGroup.appendChild(companyTitle);
-
+        
+                    // 리포트별로 표시
                     reports.forEach(report => {
                         const reportElement = document.createElement('div');
                         reportElement.className = 'report';
-
+        
+                        // 리포트 링크
                         const reportLink = document.createElement('a');
-                        reportLink.href = report.link; // 보고서 링크 설정
-                        reportLink.target = '_blank'; // 새 창에서 열기
-                        reportLink.textContent = report.title; // 보고서 제목
-
+                        reportLink.href = report.link;
+                        reportLink.target = '_blank';
+                        reportLink.textContent = report.title;
+        
+                        // 작성자
                         const reportWriter = document.createElement('p');
-                        reportWriter.textContent = `작성자: ${report.writer}`; // 작성자 표시
-
-                        reportElement.appendChild(reportLink); // 링크 추가
-                        reportElement.appendChild(reportWriter); // 작성자 추가
-                        companyGroup.appendChild(reportElement); // 회사 그룹에 보고서 추가
+                        reportWriter.textContent = `작성자: ${report.writer}`;
+        
+                        // 리포트 요소에 링크와 작성자를 추가
+                        reportElement.appendChild(reportLink);
+                        reportElement.appendChild(reportWriter);
+        
+                        companyGroup.appendChild(reportElement);
                     });
-
-                    dateGroup.appendChild(companyGroup); // 날짜 그룹에 회사 그룹 추가
+        
+                    dateGroup.appendChild(companyGroup);
                 });
-
-                reportContainer.appendChild(dateGroup); // 컨테이너에 날짜 그룹 추가
+        
+                // 최종적으로 모든 내용을 컨테이너에 추가
+                reportContainer.appendChild(dateGroup);
             });
         };
-
-        // 데이터가 모두 로드되었을 때 메시지 표시
+        
         const showEndOfResultsMessage = () => {
             const endMessage = document.createElement('div');
             endMessage.className = 'end-of-results';
@@ -152,13 +159,13 @@ document.addEventListener('DOMContentLoaded', () => {
             reportContainer.appendChild(endMessage);
         };
 
-        // 무한 스크롤 이벤트
+        // 무한 스크롤 이벤트 리스너
         window.addEventListener('scroll', () => {
             const scrollPosition = window.scrollY + window.innerHeight;
-            const threshold = document.documentElement.scrollHeight * 0.6; // 로딩 임계값 (60%)
+            const threshold = document.documentElement.scrollHeight * 0.6;
 
             if (scrollPosition > threshold) {
-                fetchAndRenderData(); // 임계값에 도달하면 데이터 가져오기
+                fetchAndRenderData();
             }
         });
 
