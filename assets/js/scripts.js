@@ -1,19 +1,25 @@
 // 메뉴 토글
 function toggleMenu() {
-    const menuPanel = document.querySelector('.menu-panel');
-    menuPanel.classList.toggle('open');
+    const menu = document.getElementById('floatingMenu');
+    menu.classList.toggle('open');
 }
 
+// 메뉴 토글
+function toggleMenu_top() {
+    const menuPanel = document.querySelector('.menu-panel');
+    menuPanel.classList.toggle('open');
+
+}
 // 검색창 토글
 function toggleSearch() {
-    const overlay = document.getElementById("searchOverlay");
-    const searchInput = document.getElementById("searchInput");
+    const overlay = document.getElementById('searchOverlay');
+    const searchInput = document.getElementById('searchInput');
 
-    if (overlay.style.display === "flex") {
-        overlay.style.display = "none";
+    if (overlay.style.display === 'flex') {
+        overlay.style.display = 'none';
     } else {
-        overlay.style.display = "flex";
-        searchInput.focus(); // 검색창 열릴 때 자동 포커스
+        overlay.style.display = 'flex';
+        searchInput.focus();
     }
 }
 
@@ -269,4 +275,30 @@ document.addEventListener('DOMContentLoaded', () => {
             reportContainer.appendChild(dateGroup);
         });
     }
+
+    const bottomNav = document.querySelector('.bottom-nav');
+    let lastScrollY = window.scrollY;
+
+    window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+        const isDesktop = window.innerWidth >= 1024; // 데스크탑 기준 너비
+    
+        if (isDesktop) {
+            // 데스크탑일 때는 숨김 처리
+            bottomNav.style.display = 'none';
+        } else {
+            if (currentScrollY > lastScrollY) {
+                // 스크롤 내릴 때 숨김
+                bottomNav.style.transform = 'translateY(100%)';
+                bottomNav.style.display = 'none';
+            } else {
+                // 스크롤 올릴 때 표시
+                bottomNav.style.transform = 'translateY(0)';
+                bottomNav.style.display = 'flex';
+            }
+        }
+    
+        lastScrollY = currentScrollY;
+    });
+    
 });
