@@ -4,6 +4,12 @@ function toggleMenu() {
     menu.classList.toggle('open');
 }
 
+// 메뉴 토글
+function toggleMenu_top() {
+    const menuPanel = document.querySelector('.menu-panel');
+    menuPanel.classList.toggle('open');
+
+}
 // 검색창 토글
 function toggleSearch() {
     const overlay = document.getElementById('searchOverlay');
