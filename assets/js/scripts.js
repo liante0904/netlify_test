@@ -1,28 +1,3 @@
-// 메뉴 토글
-function toggleMenu() {
-    const menu = document.getElementById('floatingMenu');
-    menu.classList.toggle('open');
-}
-
-// 메뉴 토글
-function toggleMenu_top() {
-    const menuPanel = document.querySelector('.menu-panel');
-    menuPanel.classList.toggle('open');
-
-}
-// 검색창 토글
-function toggleSearch() {
-    const overlay = document.getElementById('searchOverlay');
-    const searchInput = document.getElementById('searchInput');
-
-    if (overlay.style.display === 'flex') {
-        overlay.style.display = 'none';
-    } else {
-        overlay.style.display = 'flex';
-        searchInput.focus();
-    }
-}
-
 // 검색 실행
 function submitSearch() {
     const query = document.getElementById("searchInput").value.trim();
@@ -58,9 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const articleLimit = 30;
         let isFetching = false; // 중복 fetch 방지 플래그
         let hasMoreData = true; // 데이터가 더 있는지 여부
+        let lastId = null; // 마지막 레코드 ID
 
-        const apiUrl = (offset, limit) =>
-            `https://ssh-oci.duckdns.org/reports/search?keyword=${encodeURIComponent(keyword)}&offset=${offset}&limit=${limit}`;
+        const apiUrl = (offset, limit, lastId) => {
+            const baseUrl = `https://ssh-oci.duckdns.org/reports/search?keyword=${encodeURIComponent(keyword)}&offset=${offset}&limit=${limit}`;
+            return lastId ? `${baseUrl}&last_id=${lastId}` : baseUrl;
+        };
 
         loadingElement.style.display = 'block';
 
@@ -68,12 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isFetching || !hasMoreData) return;
 
             isFetching = true; // fetch 중으로 설정
-            fetch(apiUrl(offset, limit))
+            fetch(apiUrl(offset, limit, lastId))
                 .then(response => {
                     if (!response.ok) throw new Error('네트워크 응답에 문제가 있습니다.');
                     return response.json();
                 })
                 .then(data => {
+                    console.log('Fetched data:', data);  // 데이터 확인
                     if (data.length === 0) {
                         hasMoreData = false; // 더 이상 데이터 없음
                         if (offset === 0) {
@@ -85,8 +64,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     renderSearchResults(data);
-                    limit  += articleLimit; // limit 증가
+                    limit += articleLimit; // limit 증가
                     offset += articleLimit; // offset 증가
+
+                    const allRecords = Object.values(data).flatMap(companies => 
+                        Object.values(companies).flat()
+                    );
+                    
+                    if (allRecords.length === 0) {
+                        hasMoreData = false;
+                        if (offset === 0) {
+                            reportContainer.innerHTML = '<p>검색 결과가 없습니다.</p>';
+                        } else {
+                            showEndOfResultsMessage();
+                        }
+                        return;
+                    }
+                    
+                    // 마지막 레코드의 ID 저장
+                    const lastRecord = allRecords[allRecords.length - 1];
+                    lastId = lastRecord ? lastRecord.id : null;
+                    console.log('Last Record ID:', lastId);
+                    
                 })
                 .catch(error => {
                     console.error('API 호출 중 오류 발생:', error);
@@ -108,58 +107,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 const dateBParsed = new Date(dateB);
                 return dateBParsed - dateAParsed;
             });
-        
+
             sortedData.forEach(([date, companies]) => {
                 const dateGroup = document.createElement('div');
                 dateGroup.className = 'date-group';
-        
+
                 // 날짜 타이틀
                 const dateTitle = document.createElement('div');
                 dateTitle.className = 'date-title';
                 dateTitle.textContent = date;
                 dateGroup.appendChild(dateTitle);
-        
+
                 // 회사별로 리포트 표시
                 Object.entries(companies).forEach(([company, reports]) => {
                     const companyGroup = document.createElement('div');
                     companyGroup.className = 'company-group';
-        
+
                     // 회사 타이틀
                     const companyTitle = document.createElement('div');
                     companyTitle.className = 'company-title';
                     companyTitle.textContent = company;
                     companyGroup.appendChild(companyTitle);
-        
+
                     // 리포트별로 표시
                     reports.forEach(report => {
                         const reportElement = document.createElement('div');
                         reportElement.className = 'report';
-        
+                        reportElement.dataset.id = report.id; // 레코드 id 저장
+
                         // 리포트 링크
                         const reportLink = document.createElement('a');
                         reportLink.href = report.link;
                         reportLink.target = '_blank';
                         reportLink.textContent = report.title;
-        
+
                         // 작성자
                         const reportWriter = document.createElement('p');
                         reportWriter.textContent = `작성자: ${report.writer}`;
-        
+
                         // 리포트 요소에 링크와 작성자를 추가
                         reportElement.appendChild(reportLink);
                         reportElement.appendChild(reportWriter);
-        
+
                         companyGroup.appendChild(reportElement);
                     });
-        
+
                     dateGroup.appendChild(companyGroup);
                 });
-        
+
                 // 최종적으로 모든 내용을 컨테이너에 추가
                 reportContainer.appendChild(dateGroup);
             });
         };
-        
+
         const showEndOfResultsMessage = () => {
             const endMessage = document.createElement('div');
             endMessage.className = 'end-of-results';
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 무한 스크롤 이벤트 리스너
         window.addEventListener('scroll', () => {
             const scrollPosition = window.scrollY + window.innerHeight;
-            const threshold = document.documentElement.scrollHeight * 0.3;
+            const threshold = document.documentElement.scrollHeight * 0.7;
 
             if (scrollPosition > threshold) {
                 loadingElement.style.display = 'block'; // 로딩 표시
@@ -255,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 reports.forEach(report => {
                     const reportElement = document.createElement('div');
                     reportElement.className = 'report';
+                    reportElement.dataset.id = report.id; // 레코드 id 저장
 
                     const reportLink = document.createElement('a');
                     reportLink.href = report.link;
@@ -282,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', () => {
         const currentScrollY = window.scrollY;
         const isDesktop = window.innerWidth >= 1024; // 데스크탑 기준 너비
-    
+
         if (isDesktop) {
             // 데스크탑일 때는 숨김 처리
             bottomNav.style.display = 'none';
@@ -297,8 +298,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 bottomNav.style.display = 'flex';
             }
         }
-    
+
         lastScrollY = currentScrollY;
     });
-    
+
 });
