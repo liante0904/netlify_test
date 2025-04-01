@@ -1,5 +1,21 @@
 [build]
-  publish = "."
+  publish = "." # 정적 파일이 현재 디렉토리에 배포됨
+
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/recent"
+  to = "/recent.html"
+  status = 200
+
+[[redirects]]
+  from = "/"
+  to = "/recent.html"
+  status = 301
+  force = true # 기존 index.html 무시
 
 [[redirects]]
   from = "/*"
@@ -10,9 +26,3 @@
   for = "/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
-
-# 정적 파일 경로 제외
-[[redirects]]
-  from = "/assets/*"
-  to = "/assets/:splat"
-  status = 200
