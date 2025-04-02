@@ -51,15 +51,20 @@
     <!-- 검색 오버레이 -->
     <div class="search-overlay" id="searchOverlay" onclick="toggleSearch()">
         <div class="search-container">
+            <select id="searchCategory" class="search-category" onclick="event.stopPropagation()">
+                <option value="title">제목</option>
+                <option value="author">작성자</option>
+                <option value="company">증권사</option>
+            </select>
             <input
                 type="text"
                 id="searchInput"
-                placeholder="검색어를 입력하세요..."
+                placeholder="검색어 입력..."
                 class="search-input"
                 onclick="event.stopPropagation()"
             />
             <button class="search-submit" onclick="submitSearch()">검색</button>
-            <button class="search-close" onclick="toggleSearch()">×</button>
+            <button class="search-close" onclick="event.stopPropagation(); toggleSearch()">×</button>
         </div>
     </div>
     <!-- 하단 네비게이션 -->
@@ -97,5 +102,6 @@
     </div>
     <script src="/assets/js/toggle.js"></script>
     <script src="/assets/js/recent.js"></script>
+    <script src="/assets/js/search.js"></script>
 </body>
 </html>
