@@ -25,26 +25,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 const date = item.save_time.split('T')[0];
                 if (!acc[date]) acc[date] = {};
                 if (!acc[date][item.firm_nm]) acc[date][item.firm_nm] = [];
-
+            
                 acc[date][item.firm_nm].push({
                     id: item.report_id,
                     title: item.article_title,
                     writer: item.writer,
-                    link: item.download_url || item.telegram_url
+                    link: item.telegram_url || item.download_url || item.attach_url // 우선순위 변경
                 });
                 return acc;
             }, {});
-
+            
             renderReports(groupedData);
             hasMore = apiHasMore;
             offset += items.length;
-
-        } catch (error) {
-            console.error('Error:', error);
-        } finally {
-            isFetching = false;
-            loadingElement.style.display = 'none';
-        }
+            
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                isFetching = false;
+                loadingElement.style.display = 'none';
+            }            
     }
 
     function renderReports(data) {
